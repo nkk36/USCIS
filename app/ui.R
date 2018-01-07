@@ -16,8 +16,7 @@ source("R/load_data.R", chdir = TRUE)
 # Load data
 data = load_data(TRUE)
 
-psc = data[[3]]
-psc = paste(psc$psc.desc, " (",psc$psc.code, ")", sep = "")
+psc = data[[3]]$psc.desc.code
 psc = append(psc, "", after = 0)
 autocomplete_list = unique(data[[2]]$Description_Code)
 
@@ -48,7 +47,7 @@ sidebar = dashboardSidebar(
               sep = ""),
   selectInput(inputId = "NCode_2d", 
               label = "Business Sector (NAICS Code):", 
-              choices = c("",autocomplete_list), 
+              choices = c("", autocomplete_list), 
               multiple = FALSE, 
               selectize = TRUE),
   textInput(inputId = "NCode_6d", 

@@ -25,10 +25,23 @@ source("R/plot_top_psc.R", chdir = TRUE)
 source("R/plot_top_business_sector.R", chdir = TRUE)
 source("R/plot_NCDobl.R", chdir = TRUE)
 source("R/plot_PSCDobl.R", chdir = TRUE)
-source("R/load_data.R", chdir = TRUE)
-source("R/load_data.R", chdir = TRUE)
-source("R/load_data.R", chdir = TRUE)
-source("R/load_data.R", chdir = TRUE)
+source("R/table_naics_2d_1.R", chdir = TRUE)
+source("R/table_naics_2d_2.R", chdir = TRUE)
+source("R/table_naics_2d_3.R", chdir = TRUE)
+source("R/table_psc_1d_1.R", chdir = TRUE)
+source("R/table_psc_1d_2.R", chdir = TRUE)
+source("R/table_psc_1d_3.R", chdir = TRUE)
+source("R/table_naics_6d_1.R", chdir = TRUE)
+source("R/table_naics_6d_2.R", chdir = TRUE)
+source("R/table_naics_6d_3.R", chdir = TRUE)
+source("R/table_psc_4d_1.R", chdir = TRUE)
+source("R/table_psc_4d_2.R", chdir = TRUE)
+source("R/table_psc_4d_3.R", chdir = TRUE)
+source("R/plot_vendor_dollars_obligated.R", chdir = TRUE)
+source("R/table_naics_vendor.R", chdir = TRUE)
+source("R/table_contract_type_vendor.R", chdir = TRUE)
+source("R/table_individual_contracts_vendor.R", chdir = TRUE)
+
 
 
 # Load data
@@ -244,42 +257,8 @@ shinyServer(function(input, output) {
         need(input$NCode_2d != "", "Please select a 2-digit NAICS Code")
       )
       
-      if (!is.null(input$NCode_2d)){
-        
-        j = which(gsub(" \\([^\\)]*\\)","", x = input$NCode_2d) == NCode_Match()$Sector)
-        LengthJ = length(j)
-        
-        if (LengthJ == 3){
-          
-          dsub = subset(d(), NAICS.Code.2D == NCode_Match()$Code[j[1]] | NAICS.Code.2D == NCode_Match()$Code[j[2]] | NAICS.Code.2D == NCode_Match()$Code[j[3]])
-          dsub = group_by(dsub,Global.DUNS.Number, Global.Vendor.Name)
-          dsub = dplyr::summarise(dsub, Revenue = sum(Action.Obligation))
-          dsub = dsub[order(dsub$Revenue, decreasing = TRUE),]
-          dsub = dsub[1:10,]
-          colnames(dsub) = c("DUNS Number", "Contractor Name", "Funds Obligated")
-          dsub
-          
-        }else if (LengthJ == 2){
-          
-          dsub = subset(d(), NAICS.Code.2D == NCode_Match()$Code[j[1]] | NAICS.Code.2D == NCode_Match()$Code[j[2]])
-          dsub = group_by(dsub,Global.DUNS.Number, Global.Vendor.Name)
-          dsub = dplyr::summarise(dsub, Revenue = sum(Action.Obligation))
-          dsub = dsub[order(dsub$Revenue, decreasing = TRUE),]
-          dsub = dsub[1:10,]
-          colnames(dsub) = c("DUNS Number", "Contractor Name", "Funds Obligated")
-          dsub
-          
-        }else{
-          
-          dsub = subset(d(), NAICS.Code.2D == NCode_Match()$Code[j])
-          dsub = group_by(dsub,Global.DUNS.Number, Global.Vendor.Name)
-          dsub = dplyr::summarise(dsub, Revenue = sum(Action.Obligation))
-          dsub = dsub[order(dsub$Revenue, decreasing = TRUE),]
-          dsub = dsub[1:10,]
-          colnames(dsub) = c("DUNS Number", "Contractor Name", "Funds Obligated")
-          dsub
-        }
-      }
+      table_naics_2d_1(d(), NCode_Match(), input$NCode_2d)
+      
     })
   })
   
@@ -296,42 +275,8 @@ shinyServer(function(input, output) {
         need(input$NCode_2d != "", "Please select a 2-digit NAICS Code")
       )
       
-      if (!is.null(input$NCode_2d)){
-        
-        j = which(gsub(" \\([^\\)]*\\)","", x = input$NCode_2d) == NCode_Match()$Sector)
-        LengthJ = length(j)
-        
-        if (LengthJ == 3){
-          
-          dsub = subset(d(), NAICS.Code.2D == NCode_Match()$Code[j[1]] | NAICS.Code.2D == NCode_Match()$Code[j[2]] | NAICS.Code.2D == NCode_Match()$Code[j[3]])
-          dsub = group_by(dsub,Global.DUNS.Number, Global.Vendor.Name)
-          dsub = dplyr::summarise(dsub, NContracts = length(unique(PIID)))
-          dsub = dsub[order(dsub$NContracts, decreasing = TRUE),]
-          dsub = dsub[1:10,]
-          colnames(dsub) = c("DUNS Number", "Contractor Name", "Number of Contracts")
-          dsub
-          
-        }else if (LengthJ == 2){
-          
-          dsub = subset(d(), NAICS.Code.2D == NCode_Match()$Code[j[1]] | NAICS.Code.2D == NCode_Match()$Code[j[2]])
-          dsub = group_by(dsub,Global.DUNS.Number, Global.Vendor.Name)
-          dsub = dplyr::summarise(dsub, NContracts = length(unique(PIID)))
-          dsub = dsub[order(dsub$NContracts, decreasing = TRUE),]
-          dsub = dsub[1:10,]
-          colnames(dsub) = c("DUNS Number", "Contractor Name", "Number of Contracts")
-          dsub
-          
-        }else{
-          
-          dsub = subset(d(), NAICS.Code.2D == NCode_Match()$Code[j])
-          dsub = group_by(dsub,Global.DUNS.Number, Global.Vendor.Name)
-          dsub = dplyr::summarise(dsub, NContracts = length(unique(PIID)))
-          dsub = dsub[order(dsub$NContracts, decreasing = TRUE),]
-          dsub = dsub[1:10,]
-          colnames(dsub) = c("DUNS Number", "Contractor Name", "Number of Contracts")
-          dsub
-        }
-      }
+      table_naics_2d_2(d(), NCode_Match(), input$NCode_2d)
+      
     })
   })
   
@@ -347,42 +292,8 @@ shinyServer(function(input, output) {
         need(input$NCode_2d != "", "Please select a 2-digit NAICS Code")
       )
       
-      if (!is.null(input$NCode_2d)){
-        
-        j = which(gsub(" \\([^\\)]*\\)","", x = input$NCode_2d) == NCode_Match()$Sector)
-        LengthJ = length(j)
-        
-        if (LengthJ == 3){
-          
-          dsub = subset(d(), NAICS.Code.2D == NCode_Match()$Code[j[1]] | NAICS.Code.2D == NCode_Match()$Code[j[2]] | NAICS.Code.2D == NCode_Match()$Code[j[3]])
-          dsub = group_by(dsub,Global.DUNS.Number, Global.Vendor.Name)
-          dsub = dplyr::summarise(dsub, AvgContVal = sum(Action.Obligation)/length(unique(PIID)))
-          dsub = dsub[order(dsub$AvgContVal, decreasing = TRUE),]
-          dsub = dsub[1:10,]
-          colnames(dsub) = c("DUNS Number", "Contractor Name", "Average Contract Value")
-          dsub
-          
-        }else if (LengthJ == 2){
-          
-          dsub = subset(d(), NAICS.Code.2D == NCode_Match()$Code[j[1]] | NAICS.Code.2D == NCode_Match()$Code[j[2]])
-          dsub = group_by(dsub,Global.DUNS.Number, Global.Vendor.Name)
-          dsub = dplyr::summarise(dsub, AvgContVal = sum(Action.Obligation)/length(unique(PIID)))
-          dsub = dsub[order(dsub$AvgContVal, decreasing = TRUE),]
-          dsub = dsub[1:10,]
-          colnames(dsub) = c("DUNS Number", "Contractor Name", "Average Contract Value")
-          dsub
-          
-        }else{
-          
-          dsub = subset(d(), NAICS.Code.2D == NCode_Match()$Code[j])
-          dsub = group_by(dsub,Global.DUNS.Number, Global.Vendor.Name)
-          dsub = dplyr::summarise(dsub, AvgContVal = sum(Action.Obligation)/length(unique(PIID)))
-          dsub = dsub[order(dsub$AvgContVal, decreasing = TRUE),]
-          dsub = dsub[1:10,]
-          colnames(dsub) = c("DUNS Number", "Contractor Name", "Average Contract Value")
-          dsub
-        }
-      }
+      table_naics_2d_3(d(), NCode_Match(), input$NCode_2d)
+      
     })
   })
   
@@ -411,18 +322,8 @@ shinyServer(function(input, output) {
         need(input$PSC_1d != "", "Please select a 1D Product/Service Code")
       )
       
-      if (!is.null(input$PSC_1d)){
-        
-        j = which(PSC_Match()$psc.code == substr(input$PSC_1d, nchar(input$PSC_1d) - 1 , nchar(input$PSC_1d) - 1))
-        
-        dsub = subset(d(), PSC1D == PSC_Match()$psc.code[j])
-        dsub = group_by(dsub,Global.DUNS.Number, Global.Vendor.Name)
-        dsub = dplyr::summarise(dsub, Revenue = sum(Action.Obligation))
-        dsub = dsub[order(dsub$Revenue, decreasing = TRUE),]
-        dsub = dsub[1:10,]
-        colnames(dsub) = c("DUNS Number", "Contractor Name", "Funds Obligated")
-        dsub
-      }
+      table_psc_1d_1(d(), PSC_Match(), input$PSC_1d)
+      
     })
   })
   
@@ -438,18 +339,8 @@ shinyServer(function(input, output) {
         need(input$PSC_1d != "", "Please select a 1D Product/Service Code")
       )
       
-      if (!is.null(input$PSC_1d)){
-        
-        j = which(PSC_Match()$psc.code == substr(input$PSC_1d, nchar(input$PSC_1d) - 1 , nchar(input$PSC_1d) - 1))
-        
-        dsub = subset(d(), PSC1D == PSC_Match()$psc.code[j])
-        dsub = group_by(dsub,Global.DUNS.Number, Global.Vendor.Name)
-        dsub = dplyr::summarise(dsub, NContracts = length(unique(PIID)))
-        dsub = dsub[order(dsub$NContracts, decreasing = TRUE),]
-        dsub = dsub[1:10,]
-        colnames(dsub) = c("DUNS Number", "Contractor Name", "Number of Contracts")
-        dsub
-      }
+      table_psc_1d_2(d(), PSC_Match(), input$PSC_1d)
+      
     })
   })
   
@@ -465,18 +356,8 @@ shinyServer(function(input, output) {
         need(input$PSC_1d != "", "Please select a 1D Product/Service Code")
       )
       
-      if (!is.null(input$PSC_1d)){
-        
-        j = which(PSC_Match()$psc.code == substr(input$PSC_1d, nchar(input$PSC_1d) - 1 , nchar(input$PSC_1d) - 1))
-        
-        dsub = subset(d(), PSC1D == PSC_Match()$psc.code[j])
-        dsub = group_by(dsub,Global.DUNS.Number, Global.Vendor.Name)
-        dsub = dplyr::summarise(dsub, AvgContVal = sum(Action.Obligation)/length(unique(PIID)))
-        dsub = dsub[order(dsub$AvgContVal, decreasing = TRUE),]
-        dsub = dsub[1:10,]
-        colnames(dsub) = c("DUNS Number", "Contractor Name", "Average Contract Value")
-        dsub
-      }
+      table_psc_1d_3(d(), PSC_Match(), input$PSC_1d)
+    
     })
   })
   
@@ -492,13 +373,7 @@ shinyServer(function(input, output) {
         need(input$NCode_6d != "", "Please enter a 6-digit NAICS Code")
       )
       
-      dsub = subset(d(), NAICS.Code == input$NCode_6d)
-      dsub = group_by(dsub,Global.DUNS.Number, Global.Vendor.Name)
-      dsub = dplyr::summarise(dsub, Revenue = sum(Action.Obligation))
-      dsub = dsub[order(dsub$Revenue, decreasing = TRUE),]
-      dsub = dsub[1:10,]
-      colnames(dsub) = c("DUNS Number", "Contractor Name", "Funds Obligated")
-      dsub
+      table_naics_6d_1(d(), input$NCode_6d)
       
     })
   })
@@ -515,13 +390,8 @@ shinyServer(function(input, output) {
         need(input$NCode_6d != "", "Please enter a 6-digit NAICS Code")
       )
       
-      dsub = subset(d(), NAICS.Code == input$NCode_6d)
-      dsub = group_by(dsub,Global.DUNS.Number, Global.Vendor.Name)
-      dsub = dplyr::summarise(dsub, NContracts = length(unique(PIID)))
-      dsub = dsub[order(dsub$NContracts, decreasing = TRUE),]
-      dsub = dsub[1:10,]
-      colnames(dsub) = c("DUNS Number", "Contractor Name", "Number of Contracts")
-      dsub
+      table_naics_6d_2(d(), input$NCode_6d)
+      
       
     })
   })
@@ -538,13 +408,8 @@ shinyServer(function(input, output) {
         need(input$NCode_6d != "", "Please enter a 6-digit NAICS Code")
       )
       
-      dsub = subset(d(), NAICS.Code == input$NCode_6d)
-      dsub = group_by(dsub,Global.DUNS.Number, Global.Vendor.Name)
-      dsub = dplyr::summarise(dsub, AvgContVal = sum(Action.Obligation)/length(unique(PIID)))
-      dsub = dsub[order(dsub$AvgContVal, decreasing = TRUE),]
-      dsub = dsub[1:10,]
-      colnames(dsub) = c("DUNS Number", "Contractor Name", "Average Contract Value")
-      dsub
+      table_naics_6d_3(d(), input$NCode_6d)
+      
       
     })
   })
@@ -561,13 +426,7 @@ shinyServer(function(input, output) {
         need(input$PSC_4d != "", "Please enter a 4-digit Product/Service Code")
       )
       
-      dsub = subset(d(), Product.or.Service.Code == input$PSC_4d)
-      dsub = group_by(dsub,Global.DUNS.Number, Global.Vendor.Name)
-      dsub = dplyr::summarise(dsub, Revenue = sum(Action.Obligation))
-      dsub = dsub[order(dsub$Revenue, decreasing = TRUE),]
-      dsub = dsub[1:10,]
-      colnames(dsub) = c("DUNS Number", "Contractor Name", "Funds Obligated")
-      dsub
+      table_psc_4d_1(d(), input$PSC_4d)
       
     })
   })
@@ -584,13 +443,8 @@ shinyServer(function(input, output) {
         need(input$PSC_4d != "", "Please enter a 4-digit Product/Service Code")
       )
       
-      dsub = subset(d(), Product.or.Service.Code == input$PSC_4d)
-      dsub = group_by(dsub,Global.DUNS.Number, Global.Vendor.Name)
-      dsub = dplyr::summarise(dsub, NContracts = length(unique(PIID)))
-      dsub = dsub[order(dsub$NContracts, decreasing = TRUE),]
-      dsub = dsub[1:10,]
-      colnames(dsub) = c("DUNS Number", "Contractor Name", "Number of Contracts")
-      dsub
+      table_psc_4d_2(d(), input$PSC_4d)
+      
       
     })
   })
@@ -607,13 +461,7 @@ shinyServer(function(input, output) {
         need(input$PSC_4d != "", "Please enter a 4-digit Product/Service Code")
       )
       
-      dsub = subset(d(), Product.or.Service.Code == input$PSC_4d)
-      dsub = group_by(dsub,Global.DUNS.Number, Global.Vendor.Name)
-      dsub = dplyr::summarise(dsub, AvgContVal = sum(Action.Obligation)/length(unique(PIID)))
-      dsub = dsub[order(dsub$AvgContVal, decreasing = TRUE),]
-      dsub = dsub[1:10,]
-      colnames(dsub) = c("DUNS Number", "Contractor Name", "Average Contract Value")
-      dsub
+      table_psc_4d_3(d(), input$PSC_4d)
       
     })
   })
@@ -648,22 +496,7 @@ shinyServer(function(input, output) {
         need(input$Vendors != "", "Please select a contractor")
       )
       
-      dsub = subset(d(), Global.DUNS.Number == input$Vendors)
-      dsub = group_by(dsub, Fiscal.Year)
-      dsub = dplyr::summarise(dsub, Amt = sum(Action.Obligation))
-      MaxLimit = max(dsub$Amt)*1.10
-      
-      ggplot(data=dsub, aes(x = Fiscal.Year, y = Amt)) +
-        geom_bar(stat="identity", width = 0.4, fill="#619cff", colour="black") +
-        ggtitle("Total Dollars Obligated") +
-        xlab("Fiscal Year") +
-        ylab("Amount Obligated") +
-        theme(plot.title = element_text(hjust = 0.5),
-              text = element_text(size = 20),
-              axis.text.x = element_text(size = 12)) +
-        scale_y_continuous(labels = scales::comma, limits = c(0,MaxLimit)) +
-        scale_x_continuous(breaks=seq(input$fYear[1],input$fYear[2],1)) +
-        geom_label(aes(label=currency(Amt, digits = 0)), vjust=-0.2)
+      plot_vendor_dollars_obligated(d(), input$fYear[1], input$fYear[2], input$Vendors)
       
     })
   })
@@ -676,21 +509,7 @@ shinyServer(function(input, output) {
     if (v$doPlot == FALSE) return()
     isolate({
       
-      if (is.null(input$Vendors)){
-        
-        validate(
-          need(input$Vendors != "", "Please select a contractor")
-        )
-        
-      }else{
-        
-        dsub = subset(d(), Global.DUNS.Number == input$Vendors)
-        dsub = group_by(dsub, Global.DUNS.Number, Global.Vendor.Name, NAICS.Code)
-        dsub = dsub[order(dsub$NAICS.Code, decreasing = FALSE),]
-        dsub = dplyr::summarise(dsub, Revenue = sum(Action.Obligation), NContract = length(unique(PIID)))
-        colnames(dsub) = c("DUNS Number", "Contractor", "NAICS Code", "Revenue", "Number of Contracts")
-        dsub
-      }
+      table_naics_vendor(d(), input$Vendors)
       
     })
   })
@@ -720,13 +539,7 @@ shinyServer(function(input, output) {
         need(input$Vendors != "", "Please select a contractor")
       )
       
-      dsub = subset(d(), Global.DUNS.Number == input$Vendors)
-      dsub = group_by(dsub, Global.Vendor.Name ,Type.of.Contract)
-      dsub = dplyr::summarise(dsub, Number = length(unique(PIID)))
-      dsub$Type.of.Contract[which(dsub$Type.of.Contract == "")] = "UNKNOWN"
-      dsub = dsub[order(dsub$Number, decreasing = TRUE),]
-      colnames(dsub) = c("Contractor", "Type of Contract", "Number of Contracts")
-      dsub
+      table_contract_type_vendor(d(), input$Vendors)
       
     })
   })
@@ -743,12 +556,7 @@ shinyServer(function(input, output) {
         need(input$Vendors != "", "Please select a contractor")
       )
       
-      dsub = subset(d(), Global.DUNS.Number == input$Vendors)
-      dsub = group_by(dsub, Global.Vendor.Name ,PIID)
-      dsub = dplyr::summarise(dsub, Amt = sum(Action.Obligation))
-      dsub = dsub[order(dsub$Amt, decreasing = TRUE),]
-      colnames(dsub) = c("Contractor", "PIID", "Funds Obligated")
-      dsub
+      table_individual_contracts_vendor(d(), input$Vendors)
       
     })
   })

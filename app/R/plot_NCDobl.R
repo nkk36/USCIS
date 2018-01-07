@@ -2,7 +2,10 @@ plot_NCDobl = function(d, NCode_Match, syear, eyear, naics2D){
   
   if (!is.null(naics2D)){
     
-    j = which(gsub(" \\([^\\)]*\\)","", x = naics2D) == NCode_Match$Sector)
+#j = which(gsub(" \\([^\\)]*\\)","", x = naics2D) == NCode_Match$Sector)
+    
+    j = which(naics2D == NCode_Match$Sector)
+    
     LengthJ = length(j)
     
     if (LengthJ == 3){
