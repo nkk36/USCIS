@@ -21,61 +21,71 @@ psc = paste(psc$psc.desc, " (",psc$psc.code, ")", sep = "")
 psc = append(psc, "", after = 0)
 autocomplete_list = unique(data[[2]]$Description_Code)
 
-# conn = src_mysql(Sys.getenv("MYSQL_DB"),host = Sys.getenv("MYSQL_HOST"), user = Sys.getenv("MYSQL_USER"), password = Sys.getenv("MYSQL_PW"))
-# tables = sort(src_tbls(conn), decreasing = FALSE)
-# 
-# psc = collect(tbl(conn, "psc"))
-# psc = paste(psc$psc.desc, " (",psc$psc.code, ")", sep = "")
-# psc = append(psc, "", after = 0)
-# 
-# autocomplete_list = c("","Agriculture; Forestry; Fishing; and Hunting (11)",
-#                       "Mining; Quarrying; Oil; and Gas Extraction (21)",
-#                       "Utilities (22)",
-#                       "Construction (23)",
-#                       "Manufacturing (31-33)",
-#                       "Wholesale Trade (41/42)",
-#                       "Retail Trade (44-45)",
-#                       "Transportation and Warehousing (48-49)",
-#                       "Information (51)",
-#                       "Finance and Insurance (52)",
-#                       "Real Estate; Rental; and Leasing (53)",
-#                       "Professional; Scientific; and Technical Services (54)",
-#                       "Management of Companies and Enterprises (55)",
-#                       "Administrative; Support; Waste Management and Remidiation Services (56)",
-#                       "Educational Services (61)",
-#                       "Health Care and Social Assistance (62)",
-#                       "Arts; Entertainment; and Recreation (71)",
-#                       "Accomodation and Food Services (72)",
-#                       "Other Services (81)",
-#                       "Public Administration (92)")
-
+###########################################################################################################################
+#                                                                                                                         #
+#                                                    USER INTERFACE                                                       #
+#                                                                                                                         #
+###########################################################################################################################
 
 sidebar = dashboardSidebar(
+  
+  
+  #################################################################
+  #                                                               #
+  #                         SIDEBAR                               #
+  #                                                               #
+  #################################################################
   
   sidebarMenu(
     menuItem("Office Overview", tabName = "dashboard", icon = icon("building")),
     menuItem("NAICS & PSC", tabName = "npsc", icon = icon("building")),
     menuItem("Contractor Profile",icon = icon("dashboard"), tabName = "contrprofile")),
-  sliderInput("fYear",
-              "Fiscal Year",
+  sliderInput(inputId = "fYear",
+              label = "Fiscal Year",
               min = 2013,
               max = 2017,
               value = c(2013,2017), 
-              sep = ""
-  ),
-  selectInput("NCode_2d", "Business Sector (NAICS Code):", choices = c("",autocomplete_list), multiple = FALSE, selectize = TRUE),
-  textInput("NCode_6d", "6-Digit NAICS Code:", ""),
-  selectInput("PSC_1d", "Product/Service Code (1D):", choices = psc, multiple = FALSE, selectize = TRUE),
-  textInput("PSC_4d", "Product/Service Code (4D):", ""),
-  textInput("Vendors","Vendor DUNS",""),
-  actionButton("go","Update",styleclass = "primary")
-  
-  
-  
-)
+              sep = ""),
+  selectInput(inputId = "NCode_2d", 
+              label = "Business Sector (NAICS Code):", 
+              choices = c("",autocomplete_list), 
+              multiple = FALSE, 
+              selectize = TRUE),
+  textInput(inputId = "NCode_6d", 
+            label = "6-Digit NAICS Code:",
+            value = ""),
+  selectInput(inputId = "PSC_1d", 
+              label = "Product/Service Code (1D):", 
+              choices = psc, 
+              multiple = FALSE, 
+              selectize = TRUE),
+  textInput(inputId = "PSC_4d", 
+            label = "Product/Service Code (4D):", 
+            value = ""),
+  textInput(inputId = "Vendors",
+            label = "Vendor DUNS",
+            value = ""),
+  shinysky::actionButton(inputId = "go",
+                         label = "Update",
+                         styleclass = "primary")
+  )
+
+#################################################################
+#                                                               #
+#                             BODY                              #
+#                                                               #
+#################################################################
 
 body = dashboardBody(
   tabItems(
+    
+    
+    #################################################################
+    #                                                               #
+    #                         DASHBOARD                             #
+    #                                                               #
+    #################################################################
+    
     tabItem(tabName = "dashboard",
             fluidRow(
               box(
@@ -101,6 +111,14 @@ body = dashboardBody(
               )
             )
     ),
+    
+    
+    #################################################################
+    #                                                               #
+    #                             NPSC                              #
+    #                                                               #
+    #################################################################
+    
     tabItem(tabName = "npsc",
             fluidRow(
               box(
@@ -145,6 +163,14 @@ body = dashboardBody(
               )
             )
     ),
+    
+    
+    #################################################################
+    #                                                               #
+    #                   CONTRACTOR PROFILE                          #
+    #                                                               #
+    #################################################################
+    
     tabItem(tabName = "contrprofile",
             fluidRow(
               box(
@@ -164,6 +190,14 @@ body = dashboardBody(
     
   )
 )
+
+
+
+#################################################################
+#                                                               #
+#                 DEFINE DASHBOARD PAGE                         #
+#                                                               #
+#################################################################
 
 dashboardPage(
   dashboardHeader(title = "USCIS Dashboard"),

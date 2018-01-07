@@ -17,6 +17,19 @@ library(treemap)
 
 # Load functions
 source("R/load_data.R", chdir = TRUE)
+source("R/plot_total_obligated_per_fy.R", chdir = TRUE)
+source("R/plot_vendor_total.R", chdir = TRUE)
+source("R/plot_vendor_total_1.R", chdir = TRUE)
+source("R/plot_vendor_total_2.R", chdir = TRUE)
+source("R/plot_top_psc.R", chdir = TRUE)
+source("R/plot_top_business_sector.R", chdir = TRUE)
+source("R/plot_NCDobl.R", chdir = TRUE)
+source("R/plot_PSCDobl.R", chdir = TRUE)
+source("R/load_data.R", chdir = TRUE)
+source("R/load_data.R", chdir = TRUE)
+source("R/load_data.R", chdir = TRUE)
+source("R/load_data.R", chdir = TRUE)
+
 
 # Load data
 data = load_data(TRUE)
@@ -30,11 +43,23 @@ data = load_data(TRUE)
 # Define server 
 shinyServer(function(input, output) {
   
+  #################################################################
+  #                                                               #
+  #                      REACTIVE VALUES                          #
+  #                                                               #
+  #################################################################
+  
   v <- reactiveValues(doPlot = FALSE)
   
   observeEvent(input$go, {
     v$doPlot <- input$go
   })
+  
+  #################################################################
+  #                                                               #
+  #                       REACTIVE DATA                           #
+  #                                                               #
+  #################################################################
   
   d <- reactive({
     
@@ -46,8 +71,11 @@ shinyServer(function(input, output) {
   })
   
   NCode_Match <- reactive({
-    
+
     d = data[[2]]
+    colnames(d) = c("Code", "Description", "Sector")
+    d
+    
     
   })
   
@@ -56,6 +84,12 @@ shinyServer(function(input, output) {
     d = data[[3]]
     
   })
+  
+  #################################################################
+  #                                                               #
+  #                         OUTPUTS                               #
+  #                                                               #
+  #################################################################
   
   #--------------------------------------------------------------------------------
   #                         OFFICE OVERVIEW
@@ -70,21 +104,7 @@ shinyServer(function(input, output) {
     
     isolate({
       
-      dsub = group_by(d(),Fiscal.Year)
-      dsub = dplyr::summarise(dsub, Amt = sum(Action.Obligation))
-      MaxLimit = max(dsub$Amt)*1.10
-      
-      ggplot(data=dsub, aes(x=Fiscal.Year, y=Amt)) +
-        geom_bar(stat="identity", width = 0.4, fill="#619cff", colour="black") +
-        ggtitle("Total Funds Obligated") +
-        xlab("Fiscal Year") +
-        ylab("Amount Obligated (millions)") +
-        theme(plot.title = element_text(hjust = 0.5),
-              text = element_text(size = 20),
-              axis.text.x = element_text(size = 12)) +
-        scale_y_continuous(labels = function(x)x/1000000, limits = c(0,MaxLimit)) +
-        scale_x_continuous(breaks=seq(input$fYear[1],input$fYear[2],1)) +
-        geom_label(aes(label=currency(Amt, digits = 0)), vjust=-0.2)
+      plot_total_obligated_per_fy(d(), input$fYear[1], input$fYear[2])
       
     })
   })
@@ -98,15 +118,7 @@ shinyServer(function(input, output) {
     
     isolate({
       
-      dsub = group_by(d(),Global.DUNS.Number, Global.Vendor.Name)
-      dsub = dplyr::summarise(dsub, Revenue = sum(Action.Obligation))
-      dsub = dsub[order(dsub$Revenue, decreasing = TRUE),]
-      #colnames(dsub) = c("DUNS Number", "Contractor Name", "Funds Obligated")
-      dsub = dsub[1:10,]
-      field <- c("Global.Vendor.Name", "Revenue")
-      dsub$labels <- do.call("paste", c(dsub[field], sep = " \n "))
-      treemap(dsub, index = "labels", "Revenue")
-      #dsub
+      plot_vendor_total(d())
       
     })
   })
@@ -116,12 +128,7 @@ shinyServer(function(input, output) {
     
     isolate({
       
-      dsub = group_by(d(),Global.DUNS.Number, Global.Vendor.Name)
-      dsub = dplyr::summarise(dsub, NContracts = length(unique(PIID)))
-      dsub = dsub[order(dsub$NContracts, decreasing = TRUE),]
-      colnames(dsub) = c("DUNS Number", "Contractor Name", "Number of Contracts")
-      dsub = dsub[1:10,]
-      dsub
+      plot_vendor_total_1(d())
       
     })
   })
@@ -131,12 +138,7 @@ shinyServer(function(input, output) {
     
     isolate({
       
-      dsub = group_by(d(),Global.DUNS.Number, Global.Vendor.Name)
-      dsub = dplyr::summarise(dsub, Revenue = sum(Action.Obligation), NContracts = length(unique(PIID)), AvgContVal = currency(Revenue/NContracts, digits = 0))
-      dsub = dsub[order(dsub$AvgContVal, decreasing = TRUE),c(1,2,5)]
-      colnames(dsub) = c("DUNS Number", "Contractor Name", "Average Contract Value")
-      dsub = dsub[1:10,]
-      dsub
+      plot_vendor_total_2(d())
       
     })
   })
@@ -162,18 +164,7 @@ shinyServer(function(input, output) {
     if (v$doPlot == FALSE) return()
     isolate({
       
-      dsub = group_by(d(), Fiscal.Year, PSC1D)
-      dsub = dplyr::summarise(dsub, Amt = sum(Action.Obligation))
-      dsub = left_join(dsub, PSC_Match(), by = c("PSC1D" = "psc.code"))
-      dsub$Amt[which(is.na(dsub$Amt))] = 0
-      #dsub = dsub[order(dsub$Amt, decreasing = TRUE),]
-      #dsub = dsub[,c(3,1,2)]
-      dsub$psc.desc[which(is.na(dsub$psc.desc))] = "Other"
-      #colnames(dsub) = c("Product/Service Type", "Product/Service Code", "Funds Obligated")
-      #dsub
-      dsub$psc.desc <- reorder(dsub$psc.desc, -dsub$Amt)
-      dsub$psc.desc <- factor(dsub$psc.desc, levels=rev(levels(dsub$psc.desc)))
-      ggplot(dsub, aes(x=Fiscal.Year, y=Amt, fill=psc.desc)) + geom_bar(stat='identity')
+      plot_top_psc(d(), PSC_Match())
       
     })
   })
@@ -186,14 +177,7 @@ shinyServer(function(input, output) {
     if (v$doPlot == FALSE) return()
     isolate({
       
-      dsub = group_by(d(), NAICS.Code.2D)
-      dsub = dplyr::summarise(dsub, Amt = sum(Action.Obligation))
-      dsub = right_join(dsub, NCode_Match(), by = c("NAICS.Code.2D" = "Code"))
-      dsub$Amt[which(is.na(dsub$Amt))] = 0
-      dsub = dsub[order(dsub$Amt, decreasing = TRUE),]
-      dsub = dsub[,c(3,1,2)]
-      colnames(dsub) = c("Sector", "2D NAICS Code", "Funds Obligated")
-      dsub
+      plot_top_business_sector(d(), NCode_Match())
       
     })
   })
@@ -226,73 +210,8 @@ shinyServer(function(input, output) {
         need(input$NCode_2d != "", "Please select a 2-digit NAICS Code")
       )
       
-      if (!is.null(input$NCode_2d)){
-        
-        j = which(gsub(" \\([^\\)]*\\)","", x = input$NCode_2d) == NCode_Match()$Sector)
-        LengthJ = length(j)
-        
-        if (LengthJ == 3){
-          
-          dsub = subset(d(), NAICS.Code.2D == NCode_Match()$Code[j[1]] | NAICS.Code.2D == NCode_Match()$Code[j[2]] | NAICS.Code.2D == NCode_Match()$Code[j[3]])
-          dsub = group_by(dsub, Fiscal.Year, NAICS.Code.2D)
-          dsub = dplyr::summarise(dsub, Amt = sum(Action.Obligation))
-          
-          MaxLimit = max(dsub$Amt)*1.10
-          
-          ggplot(data=dsub, aes(x=Fiscal.Year, y=Amt)) +
-            geom_bar(aes(fill = NAICS.Code.2D), position = "dodge", stat="identity", width = 0.4) +
-            ggtitle(gsub(" \\([^\\)]*\\)","", x = input$NCode_2d)) +
-            xlab("Fiscal Year") +
-            ylab("Amount Obligated (millions)") +
-            theme(plot.title = element_text(hjust = 0.5),
-                  text = element_text(size = 20),
-                  axis.text.x = element_text(size = 12)) +
-            scale_x_continuous(breaks=seq(input$fYear[1],input$fYear[2],1)) +
-            scale_y_continuous(labels = function(x)x/1000000, limits = c(0,MaxLimit)) +
-            geom_label(aes(label=currency(Amt, digits = 0)), vjust=-0.2)
-          
-        }else if (LengthJ == 2){
-          
-          dsub = subset(d(), NAICS.Code.2D == NCode_Match()$Code[j[1]] | NAICS.Code.2D == NCode_Match()$Code[j[2]])
-          dsub = group_by(dsub, Fiscal.Year, NAICS.Code.2D)
-          dsub = dplyr::summarise(dsub, Amt = sum(Action.Obligation))
-          
-          MaxLimit = max(dsub$Amt)*1.10
-          
-          ggplot(data=dsub, aes(x = Fiscal.Year, y = Amt)) +
-            geom_bar(aes(fill = NAICS.Code.2D), position = "dodge", stat="identity", width = 0.4) +
-            ggtitle(gsub(" \\([^\\)]*\\)","", x = input$NCode_2d)) +
-            xlab("Fiscal Year") +
-            ylab("Amount Obligated (millions)") +
-            theme(plot.title = element_text(hjust = 0.5),
-                  text = element_text(size = 20),
-                  axis.text.x = element_text(size = 12)) +
-            scale_x_continuous(breaks=seq(input$fYear[1],input$fYear[2],1)) +
-            scale_y_continuous(labels = function(x)x/1000000, limits = c(0,MaxLimit)) +
-            geom_label(aes(label=currency(Amt, digits = 0)), vjust=-0.2)
-          
-        }else{
-          
-          dsub = subset(d(), NAICS.Code.2D == NCode_Match()$Code[j])
-          dsub = group_by(dsub, Fiscal.Year, NAICS.Code.2D)
-          dsub = dplyr::summarise(dsub, Amt = sum(Action.Obligation))
-          
-          MaxLimit = max(dsub$Amt)*1.10
-          
-          ggplot(data=dsub, aes(x=Fiscal.Year, y=Amt)) +
-            geom_bar(stat="identity", width = 0.4, fill="#619cff", colour="black") +
-            ggtitle(gsub(" \\([^\\)]*\\)","", x = input$NCode_2d)) +
-            xlab("Fiscal Year") +
-            ylab("Amount Obligated (millions)") +
-            theme(plot.title = element_text(hjust = 0.5),
-                  text = element_text(size = 20),
-                  axis.text.x = element_text(size = 12)) +
-            scale_x_continuous(breaks=seq(input$fYear[1],input$fYear[2],1)) +
-            scale_y_continuous(labels = function(x)x/1000000, limits = c(0,MaxLimit)) +
-            geom_label(aes(label=currency(Amt, digits = 0)), vjust=-0.2)
-          
-        }
-      }
+      plot_NCDobl(d(), NCode_Match(), input$fYear[1], input$fYear[2], input$NCode_2d)
+      
     })
   })
   
@@ -308,29 +227,8 @@ shinyServer(function(input, output) {
         need(input$PSC_1d != "", "Please select a Product/Service Code")
       )
       
-      if (!is.null(input$PSC_1d)){
-        
-        j = which(PSC_Match()$psc.code == substr(input$PSC_1d, nchar(input$PSC_1d) - 1 , nchar(input$PSC_1d) - 1))
-        
-        dsub = subset(d(), PSC1D == PSC_Match()$psc.code[j])
-        dsub = group_by(dsub, Fiscal.Year)
-        dsub = dplyr::summarise(dsub, Amt = sum(Action.Obligation))
-        
-        MaxLimit = max(dsub$Amt)*1.10
-        MinLimit = min(dsub$Amt)*1.10
-        
-        ggplot(data=dsub, aes(x=Fiscal.Year, y=Amt)) +
-          geom_bar(stat="identity", width = 0.4, fill="#619cff", colour="black") +
-          ggtitle(gsub(" \\([^\\)]*\\)","", x = input$PSC_1d)) +
-          xlab("Fiscal Year") +
-          ylab("Amount Obligated (millions)") +
-          theme(plot.title = element_text(hjust = 0.5),
-                text = element_text(size = 20),
-                axis.text.x = element_text(size = 12)) +
-          scale_x_continuous(breaks=seq(input$fYear[1],input$fYear[2],1)) +
-          scale_y_continuous(labels = function(x)x/1000000, limits = c(MinLimit,MaxLimit)) +
-          geom_label(aes(label = Amt, vjust=-0.2))
-      }
+      plot_PSCDobl(d(), PSC_Match(), input$fYear[1], input$fYear[2], input$PSC_1d)
+      
     })
   })
   
