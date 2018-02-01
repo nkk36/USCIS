@@ -76,6 +76,9 @@ sidebar = dashboardSidebar(
 #################################################################
 
 body = dashboardBody(
+  
+  tags$head(includeScript("google-analytics.js")),
+  
   tabItems(
     
     
